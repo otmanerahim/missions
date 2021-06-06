@@ -30,7 +30,6 @@ class Ghost(MazeRunner):
     def moveBySelf(self):
         if self.overshotTarget():
             self.node = self.target
-            self.portal()
             validDirections = self.getValidDirections()
             self.direction = self.randomDirection(validDirections)
             self.target = self.node.neighbors[self.direction]
@@ -63,11 +62,6 @@ class Blinky(Ghost):
         self.color = RED
         self.image = self.spritesheet.getImage(4,2,TILEWIDTH*2, TILEHEIGHT*2)
 
-    def setStartPosition(self):
-        self.node = self.node.neighbors[RIGHT]
-        self.target = self.node
-        self.setPosition()
-
     def getValidDirections(self,pacman):
         validDirections = []
         for key in self.node.neighbors.keys():
@@ -82,7 +76,6 @@ class Blinky(Ghost):
     def moveBySelf(self,pacman):
         if self.overshotTarget():
             self.node = self.target
-            self.portal()
             validDirections = self.getValidDirections(pacman)
             self.direction = self.getClosestDirection(validDirections)
             self.target = self.node.neighbors[self.direction]
@@ -107,14 +100,11 @@ class Pinky(Ghost):
         self.image = self.spritesheet.getImage(0,3,TILEWIDTH*2, TILEHEIGHT*2)
 
     def setStartPosition(self):
-        self.node = self.node.neighbors[RIGHT].neighbors[RIGHT]
-        self.target = self.node
         self.setPosition()
     
     def moveBySelf(self):
         if self.overshotTarget():
             self.node = self.target
-            self.portal()
             validDirections = self.getValidDirections()
             self.direction = self.getClosestDirection(validDirections)
             self.target = self.node.neighbors[self.direction]
@@ -138,8 +128,6 @@ class Inky(Ghost):
         self.image = self.spritesheet.getImage(2,4,TILEWIDTH*2, TILEHEIGHT*2)
 
     def setStartPosition(self):
-        self.node = self.node.neighbors[RIGHT].neighbors[DOWN]
-        self.target = self.node
         self.setPosition()
         
         

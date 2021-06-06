@@ -106,6 +106,7 @@ class Pinky(Ghost):
         self.color = PINK
         self.image = self.spritesheet.getImage(0,3,TILEWIDTH*2, TILEHEIGHT*2)
 
+    
     def setStartPosition(self):
         self.node = self.node.neighbors[RIGHT].neighbors[RIGHT]
         self.target = self.node
@@ -137,11 +138,12 @@ class Inky(Ghost):
         self.color = TEAL
         self.image = self.spritesheet.getImage(2,4,TILEWIDTH*2, TILEHEIGHT*2)
 
+    
     def setStartPosition(self):
         self.node = self.node.neighbors[RIGHT].neighbors[DOWN]
         self.target = self.node
         self.setPosition()
-    
+
     def moveBySelf(self):
         if self.overshotTarget():
             self.node = self.target
@@ -168,11 +170,40 @@ class Clyde(Ghost):
         self.name = "clyde"
         self.color = ORANGE
         self.image = self.spritesheet.getImage(2,5,TILEWIDTH*2, TILEHEIGHT*2)
-        
+    
+    def getValidDirections(self,pacman):
+        validDirections = []
+        for key in self.node.neighbors.keys():
+            if self.node.neighbors[key] is not None:
+                if key != self.direction * -1:
+                    validDirections.append(key)
+        if(len(validDirections)==0):
+            validDirections.append(pacman.direction)
+        return validDirections
+
+    def moveBySelf(self,pacman):
+        if self.overshotTarget():
+            self.node = self.target
+            self.portal()
+            validDirections = self.getValidDirections(pacman)
+            self.direction = self.getClosestDirection(validDirections)
+            self.target = self.node.neighbors[self.direction]
+            self.setPosition()
             
-    def setStartPosition(self):
-        self.setPosition()
-        
+    
+    def chaseGoal(self, pacman):
+        d = pacman.position - self.position
+        ds = d.magnitudeSquared()
+        if ds <= (TILEWIDTH * 8)**2:
+            self.goal = self.randomDirection(super().getValidDirections()) * TILEWIDTH
+        else:
+            self.goal = pacman.position + pacman.direction * TILEWIDTH * 4
+    
+    def update(self, dt,pacman):
+        self.visible = True
+        self.position += self.direction*self.speed*dt
+        self.chaseGoal(pacman)
+        self.moveBySelf(pacman)
 
         
 class GhostGroup(object):
@@ -188,12 +219,10 @@ class GhostGroup(object):
 
     def update(self, dt,pacman,blinky=None):
         for ghost in self:
-            if(ghost.name=="blinky" or ghost.name=="pinky"):
+            if(ghost.name=="blinky" or ghost.name=="pinky" or ghost.name=="clyde"):
                 ghost.update(dt,pacman)
             elif(ghost.name=="inky"):
                 ghost.update(dt,pacman,blinky)
-            else:
-                ghost.update(dt)
             
     def render(self, screen):
         for ghost in self:

@@ -21,6 +21,12 @@ class MazeRunner(object):
     def setPosition(self):
         self.position = self.node.position.copy()
         
+    
+    def portal(self):
+        if self.node.portalNode:
+            self.node = self.node.portalNode
+            self.setPosition()
+            
     def update(self, dt):
         self.position += self.direction*self.speed*dt
         self.moveBySelf()
@@ -44,11 +50,6 @@ class MazeRunner(object):
             return node2Self >= node2Target
         return False
 
-    
-    def portal(self):
-        if self.node.portalNode:
-            self.node = self.node.portalNode
-            self.setPosition()
 
     def reverseDirection(self):
         if self.direction is UP: self.direction = DOWN

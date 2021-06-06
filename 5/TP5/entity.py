@@ -24,6 +24,11 @@ class MazeRunner(object):
     def update(self, dt):
         self.position += self.direction*self.speed*dt
         self.moveBySelf()
+    
+    def portal(self):
+        if self.node.portalNode:
+            self.node = self.node.portalNode
+            self.setPosition()
 
     def moveBySelf(self):
         if self.direction is not STOP:
