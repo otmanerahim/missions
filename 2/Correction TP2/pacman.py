@@ -26,6 +26,15 @@ class Pacman(MazeRunner):
         self.image = self.startImage
         self.animations["death"].reset()
         self.animateDeath = False
+    
+    def eatPellets(self, pelletList):
+        for pellet in pelletList:
+            d = self.position - pellet.position
+            dSquared = d.magnitudeSquared()
+            rSquared = (pellet.radius+self.collideRadius)**2
+            if dSquared <= rSquared:
+                return pellet
+        return None
         
     def update(self, dt):
         self.visible = True

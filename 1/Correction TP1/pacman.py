@@ -85,6 +85,15 @@ class Pacman(MazeRunner):
             if node.pacmanStart:
                 return node
         return node
+
+    def eatPellets(self, pelletList):
+        for pellet in pelletList:
+            d = self.position - pellet.position
+            dSquared = d.magnitudeSquared()
+            rSquared = (pellet.radius+self.collideRadius)**2
+            if dSquared <= rSquared:
+                return pellet
+        return None
     
     def setStartPosition(self):
         self.direction = LEFT
