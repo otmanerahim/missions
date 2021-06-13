@@ -20,6 +20,10 @@ class Pacman(MazeRunner):
         self.lifeicon = self.spritesheet.getImage(0, 1, TILEWIDTH*2, TILEHEIGHT*2)
         self.animateDeath = False
         
+    def loseLife(self):
+        self.lives -= 1
+        self.animation = self.animations["death"]
+        self.animateDeath = True
 
     def reset(self):
         self.setStartPosition()
@@ -37,6 +41,8 @@ class Pacman(MazeRunner):
         else:
             self.moveBySelf()
 
+    def updateDeath(self, dt):
+        self.image = self.animation.update(dt)
         
     def getValidKey(self):
         key_pressed = pygame.key.get_pressed()
@@ -60,6 +66,7 @@ class Pacman(MazeRunner):
                 self.reverseDirection()
             if self.overshotTarget():
                 self.node = self.target
+                self.portal()
                 if self.node.neighbors[direction] is not None:
                     if self.node.homeEntrance:
                         if self.node.neighbors[self.direction] is not None:
@@ -79,13 +86,6 @@ class Pacman(MazeRunner):
                         self.setPosition()
                         self.direction = STOP
                             
-    
-    def findStartNode(self):
-        for node in self.nodes.nodeList:
-            if node.pacmanStart:
-                return node
-        return node
-
     def eatPellets(self, pelletList):
         for pellet in pelletList:
             d = self.position - pellet.position
@@ -94,6 +94,29 @@ class Pacman(MazeRunner):
             if dSquared <= rSquared:
                 return pellet
         return None
+
+    def eatGhost(self, ghosts):
+        for ghost in ghosts:
+            d = self.position - ghost.position
+            dSquared = d.magnitudeSquared()
+            rSquared = (self.collideRadius + ghost.collideRadius)**2
+            if dSquared <= rSquared:
+                return ghost
+        return None
+
+    def eatFruit(self, fruit):
+        d = self.position - fruit.position
+        dSquared = d.magnitudeSquared()
+        rSquared = (self.collideRadius+fruit.collideRadius)**2
+        if dSquared <= rSquared:
+            return True
+        return False
+    
+    def findStartNode(self):
+        for node in self.nodes.nodeList:
+            if node.pacmanStart:
+                return node
+        return node
     
     def setStartPosition(self):
         self.direction = LEFT
