@@ -21,12 +21,6 @@ class MazeRunner(object):
     def setPosition(self):
         self.position = self.node.position.copy()
         
-    
-    def portal(self):
-        if self.node.portalNode:
-            self.node = self.node.portalNode
-            self.setPosition()
-            
     def update(self, dt):
         self.position += self.direction*self.speed*dt
         self.moveBySelf()
@@ -35,6 +29,7 @@ class MazeRunner(object):
         if self.direction is not STOP:
             if self.overshotTarget():
                 self.node = self.target
+                self.portal()
                 if self.node.neighbors[self.direction] is not None:
                     self.target = self.node.neighbors[self.direction]
                 else:
@@ -60,6 +55,10 @@ class MazeRunner(object):
         self.node = self.target
         self.target = temp
 
+    def portal(self):
+        if self.node.portalNode:
+            self.node = self.node.portalNode
+            self.setPosition()
 
     def render(self, screen):
         if self.visible:
