@@ -116,7 +116,8 @@ class Blinky(Ghost):
     def update(self, dt,pacman):
         self.visible = True
         self.position += self.direction*self.speed*dt
-        self.chaseGoal(pacman)
+        if(self.name=="blinky"):
+            self.chaseGoal(pacman)
         self.moveBySelf(pacman)
 
     def chaseGoal(self, pacman):
@@ -134,7 +135,6 @@ class Pinky(Ghost):
         self.node = startNode.neighbors[DOWN]
         self.target = self.node
         self.setPosition()
-
         
 
 class Inky(Ghost):

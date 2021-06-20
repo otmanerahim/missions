@@ -28,6 +28,10 @@ class GameController(object):
         self.sheet = Spritesheet()
         self.maze = Maze(self.sheet)
         self.flashBackground = False
+        self.eat_sound = pygame.mixer.Sound("./sound/pacman_chomp.wav")
+        self.death_sound= pygame.mixer.Sound("./sound/pacman_death.wav")
+        self.eatghost_sound= pygame.mixer.Sound("./sound/pacman_eatghost.wav")
+        self.intro_sound=pygame.mixer.Sound("./sound/pacman_beginning.wav")
         
     def setBackground(self):
         self.background = pygame.surface.Surface(SCREENSIZE).convert()
@@ -37,6 +41,7 @@ class GameController(object):
     def startGame(self):
         print("Start game")
         self.level.reset()
+        pygame.mixer.Sound.play(self.intro_sound)
         levelmap = self.level.getLevel()
         self.maze.getMaze(levelmap["name"].split(".")[0])
         self.maze.constructMaze(self.background, self.background_flash, levelmap["row"])
@@ -113,6 +118,7 @@ class GameController(object):
                     if self.gameover:
                         self.startGame()
                     else:
+                        pygame.mixer.Sound.stop(self.intro_sound)
                         self.pause.player()
                         if self.pause.paused:
                             self.text.showPause()
@@ -122,7 +128,7 @@ class GameController(object):
     def checkPelletEvents(self):
         pellet = self.pacman.eatPellets(self.pellets.pelletList)
         if pellet:
-            #pygame.mixer.Sound.play(self.eat_sound)
+            pygame.mixer.Sound.play(self.eat_sound)
             self.pelletsEaten += 1
             self.score += pellet.points
             self.pellets.pelletList.remove(pellet)
@@ -139,6 +145,7 @@ class GameController(object):
         self.ghosts.release(self.pelletsEaten)
         ghost = self.pacman.eatGhost(self.ghosts)
         if ghost is not None:
+            pygame.mixer.Sound.play(self.death_sound)
             self.pacman.loseLife()
             self.ghosts.hide()
             self.pause.startTimer(3, "die")
