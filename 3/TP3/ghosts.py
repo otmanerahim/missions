@@ -41,6 +41,8 @@ class Ghost(MazeRunner):
         for key in self.node.neighbors.keys():
             if self.node.neighbors[key] is not None:
                 validDirections.append(key)
+        if len(validDirections) == 0:
+            validDirections.append(self.forceBacktrack())
         return validDirections
     
     def randomDirection(self, validDirections):
@@ -109,6 +111,7 @@ class Blinky(Ghost):
             validDirections = self.getValidDirections(pacman)
             ## On prend la direction la plus proche de pacman en la calculant selon la position de pacman
             self.direction = self.getClosestDirection(validDirections)
+            print("#### Direction de Blinky : ", self.direction , "Direction de pacman : ",pacman.direction," ####")
             self.target = self.node.neighbors[self.direction]
             self.setPosition()
 
@@ -141,7 +144,16 @@ class Pinky(Ghost):
             self.direction = self.getClosestDirection(validDirections)
             self.target = self.node.neighbors[self.direction]
             self.setPosition()
-    
+    def forceBacktrack(self):
+        if self.direction * -1 == UP:
+            return UP
+        if self.direction * -1 == DOWN:
+            return DOWN
+        if self.direction * -1 == LEFT:
+            return LEFT
+        if self.direction * -1 == RIGHT:
+            return RIGHT
+
     def chaseGoal(self, pacman):
         self.goal =pacman.position+ pacman.direction * TILEWIDTH * 4
 
@@ -163,10 +175,14 @@ class Inky(Ghost):
 
 
     def setStartPosition(self):
+        self.bannedDirections = [RIGHT]
         startNode = self.findStartNode()
-        self.node = startNode.neighbors[DOWN].neighbors[UP].neighbors[LEFT].neighbors[LEFT]
+        pinkyNode = startNode.neighbors[DOWN]
+        self.node = pinkyNode.neighbors[LEFT]
         self.target = self.node
+        self.spawnNode = pinkyNode.neighbors[LEFT]
         self.setPosition()
+        
 
         
         
@@ -201,7 +217,7 @@ class GhostGroup(object):
     def __iter__(self):
         return iter(self.ghosts)
 
-    def update(self, dt,pacman,blinky=None):
+    def update(self, dt,pacman):
         for ghost in self:
             if(ghost.name=="blinky" or ghost.name=="pinky"):
                 ghost.update(dt,pacman)

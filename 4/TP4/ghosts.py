@@ -23,6 +23,17 @@ class Ghost(MazeRunner):
                 return node
         return node
     
+    def forceBacktrack(self):
+        if self.direction * -1 == UP:
+            return UP
+        if self.direction * -1 == DOWN:
+            return DOWN
+        if self.direction * -1 == LEFT:
+            return LEFT
+        if self.direction * -1 == RIGHT:
+            return RIGHT
+
+    
     def setStartPosition(self):
         self.node = self.findStartNode()
         self.target = self.node
@@ -41,6 +52,8 @@ class Ghost(MazeRunner):
         for key in self.node.neighbors.keys():
             if self.node.neighbors[key] is not None:
                 validDirections.append(key)
+        if len(validDirections) == 0:
+            validDirections.append(self.forceBacktrack())
         return validDirections
     
     def randomDirection(self, validDirections):
@@ -201,11 +214,14 @@ class Clyde(Ghost):
         self.image = self.spritesheet.getImage(2,5,TILEWIDTH*2, TILEHEIGHT*2)
 
     def setStartPosition(self):
+        self.bannedDirections = [LEFT]
         startNode = self.findStartNode()
-        self.node = startNode.neighbors[DOWN].neighbors[UP].neighbors[LEFT].neighbors[LEFT].neighbors[DOWN]
+        pinkyNode = startNode.neighbors[DOWN]
+        self.node = pinkyNode.neighbors[RIGHT]
+        self.spawnNode = pinkyNode.neighbors[RIGHT]
         self.target = self.node
         self.setPosition()
-
+        
 
         
 class GhostGroup(object):

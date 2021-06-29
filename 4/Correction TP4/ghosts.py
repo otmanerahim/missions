@@ -212,7 +212,20 @@ class Clyde(Ghost):
             if self.node.neighbors[key] is not None:
                 if(key != self.direction * -1 ):
                     validDirections.append(key)
+        if len(validDirections) == 0:
+            validDirections.append(self.forceBacktrack())
         return validDirections
+
+    
+    def forceBacktrack(self):
+            if self.direction * -1 == UP:
+                return UP
+            if self.direction * -1 == DOWN:
+                return DOWN
+            if self.direction * -1 == LEFT:
+                return LEFT
+            if self.direction * -1 == RIGHT:
+                return RIGHT
 
     def moveBySelf(self,pacman):
         if self.overshotTarget():

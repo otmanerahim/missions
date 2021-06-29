@@ -46,7 +46,6 @@ class Ghost(MazeRunner):
     def freightMode(self):
         self.mode = Mode("FREIGHT", time=7, speedMult=0.5)
         self.modeTimer = 0
-        self.reverseDirection()
 
     def setupModeStack(self):
         modes = Stack()
@@ -215,8 +214,7 @@ class Ghost(MazeRunner):
         self.position += self.direction*self.speed*dt
         self.modeUpdate(dt)
         print("Actual mode for ", self.name , " : ", self.mode.name , " : ", self.mode.time)
-        
-        self.updateAnimation(dt)
+    
 
     def portalSlowdown(self):
         self.speed = 100
@@ -275,6 +273,8 @@ class Blinky(Ghost):
         else:
             self.randomGoal()
         self.moveBySelf()
+        
+        self.updateAnimation(dt)
 
     def chaseGoal(self, pacman):
         self.goal= pacman.position
@@ -317,6 +317,8 @@ class Pinky(Ghost):
         else:
             self.randomGoal()
         self.moveBySelf()
+        
+        self.updateAnimation(dt)
         
 
 class Inky(Ghost):
@@ -362,6 +364,8 @@ class Inky(Ghost):
         else:
             self.randomGoal()
         self.moveBySelf()
+        
+        self.updateAnimation(dt)
         
 
         
@@ -413,6 +417,8 @@ class Clyde(Ghost):
         else:
             self.randomGoal()
         self.moveBySelf()
+        
+        self.updateAnimation(dt)
 
         
 class GhostGroup(object):

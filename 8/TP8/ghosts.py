@@ -50,7 +50,6 @@ class Ghost(MazeRunner):
     def freightMode(self):
         self.mode = Mode("FREIGHT", time=7, speedMult=0.5)
         self.modeTimer = 0
-        self.reverseDirection()
 
     def setupModeStack(self):
         modes = Stack()

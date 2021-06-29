@@ -51,8 +51,6 @@ class Ghost(MazeRunner):
         self.modeTimer = 0
         self.reverseDirection()
     
-    def frightenedGoal(self,pacman):
-        self.goal = self.position - ((pacman.position +(pacman.direction * TILEWIDTH)) - self.position) 
 
     def setupModeStack(self):
         modes = Stack()
@@ -270,8 +268,6 @@ class Blinky(Ghost):
         self.mode.time=8
         if self.mode.name == "CHASE":
             self.chaseGoal(pacman)
-        elif self.mode.name == "FREIGHT":
-            self.frightenedGoal(pacman)
         elif self.mode.name == "SPAWN":
             self.spawnGoal()
         elif self.mode.name == "SCATTER":
@@ -317,8 +313,6 @@ class Pinky(Ghost):
         self.mode.time=12
         if self.mode.name == "CHASE":
             self.chaseGoal(pacman)
-        elif self.mode.name == "FREIGHT":
-            self.frightenedGoal(pacman)
         elif self.mode.name == "SPAWN":
             self.spawnGoal()
             
@@ -367,8 +361,6 @@ class Inky(Ghost):
         self.mode.time=15
         if self.mode.name == "CHASE":
             self.chaseGoal(pacman,blinky)
-        elif self.mode.name == "FREIGHT":
-            self.frightenedGoal(pacman)
         elif self.mode.name == "SPAWN":
             self.spawnGoal()
             
@@ -424,8 +416,6 @@ class Clyde(Ghost):
         self.mode.time=10
         if self.mode.name == "CHASE":
             self.chaseGoal(pacman)
-        elif self.mode.name == "FREIGHT":
-            self.frightenedGoal(pacman)
         elif self.mode.name == "SPAWN":
             self.spawnGoal()
             
