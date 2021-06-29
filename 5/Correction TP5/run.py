@@ -32,8 +32,7 @@ class GameController(object):
         self.death_sound= pygame.mixer.Sound("./sound/pacman_death.wav")
         self.eatghost_sound= pygame.mixer.Sound("./sound/pacman_eatghost.wav")
         self.intro_sound=pygame.mixer.Sound("./sound/pacman_beginning.wav")
-        
-        self.siren_sound=pygame.mixer.Sound("./sound/pacmansiren_sound.mp3")
+    
         
     def setBackground(self):
         self.background = pygame.surface.Surface(SCREENSIZE).convert()
