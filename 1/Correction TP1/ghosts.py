@@ -31,6 +31,8 @@ class Ghost(MazeRunner):
     def getClosestDirection(self, validDirections):
         distances = []
         for direction in validDirections:
+            ## Ici on prend en compte l'objectif dans nos calculs afin de trouver la direction
+            ## la plus proche de cet objectif !
             diffVec = self.node.position + direction*TILEWIDTH - self.goal
             distances.append(diffVec.magnitudeSquared())
         index = distances.index(min(distances))
@@ -41,23 +43,11 @@ class Ghost(MazeRunner):
         for key in self.node.neighbors.keys():
             if self.node.neighbors[key] is not None:
                 validDirections.append(key)
-        if len(validDirections) == 0:
-            validDirections.append(self.forceBacktrack())
         return validDirections
     
     def randomDirection(self, validDirections):
         index = randint(0, len(validDirections) - 1)
         return validDirections[index]
-
-    def forceBacktrack(self):
-        if self.direction * -1 == UP:
-            return UP
-        if self.direction * -1 == DOWN:
-            return DOWN
-        if self.direction * -1 == LEFT:
-            return LEFT
-        if self.direction * -1 == RIGHT:
-            return RIGHT
     
     def moveBySelf(self):
         if self.overshotTarget():
@@ -103,7 +93,6 @@ class Blinky(Ghost):
         self.image = self.spritesheet.getImage(4,2,TILEWIDTH*2, TILEHEIGHT*2)
 
     def setStartPosition(self):
-        ## Changement de la position de départ pour éviter que blinky se retrouve coincé dans la maison 
         self.setPosition()
 
     def getValidDirections(self,pacman):
@@ -132,6 +121,7 @@ class Blinky(Ghost):
             self.chaseGoal(pacman)
         self.moveBySelf(pacman)
 
+    ## Notre objectif est la position de pacman, il faut alors récupérer sa position et la prendre en compte dans nos calculs
     def chaseGoal(self, pacman):
         self.goal= pacman.position
 

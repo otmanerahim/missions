@@ -17,6 +17,7 @@ class Ghost(MazeRunner):
         self.setStartPosition()
         self.points = 200
         
+    ## Fonction permettant de définir le premier noeud où vont apparaitre les personnages du jeu
     def findStartNode(self):
         for node in self.nodes.homeList:
             if node.homeEntrance:
@@ -28,6 +29,8 @@ class Ghost(MazeRunner):
         self.target = self.node
         self.setPosition()
         
+    ## Cette fonction est à compléter, cela permet de calculer la direction la plus courte pour atteindre
+    ## un objectif nommé "goal"
     def getClosestDirection(self, validDirections):
         distances = []
         for direction in validDirections:
@@ -35,7 +38,9 @@ class Ghost(MazeRunner):
             distances.append(diffVec.magnitudeSquared())
         index = distances.index(min(distances))
         return validDirections[index]
-        
+    
+    ## Fonction permettant de trouver une direction valide (trouver un noeud voisin)
+    ## Un noeud voisin est le premier noeud qui peut être à droite, à gauche, en haut ou en bas du personnage
     def getValidDirections(self):
         validDirections = []
         for key in self.node.neighbors.keys():
@@ -45,9 +50,11 @@ class Ghost(MazeRunner):
             validDirections.append(self.forceBacktrack())
         return validDirections
     
+    ## Fonction choisissant une direction aléatoire parmi les directions valides
     def randomDirection(self, validDirections):
         index = randint(0, len(validDirections) - 1)
         return validDirections[index]
+
 
     def forceBacktrack(self):
         if self.direction * -1 == UP:
@@ -59,6 +66,7 @@ class Ghost(MazeRunner):
         if self.direction * -1 == RIGHT:
             return RIGHT
     
+     ## Fonction du jeu permettant de faire avancer la position d'un personnage du jeu en attribuant une nouvelle position
     def moveBySelf(self):
         if self.overshotTarget():
             self.node = self.target
@@ -67,30 +75,32 @@ class Ghost(MazeRunner):
             self.target = self.node.neighbors[self.direction]
             self.setPosition()
     
-                
+    ## Fonction du jeu calculant la nouvelle position d'un personnage en fonction de sa direction et de sa vitesse
     def update(self, dt):
         self.visible = True
         self.position += self.direction*self.speed*dt
         self.moveBySelf()
 
+    ## Fonction du jeu permettant de réduire la vitesse d'un personnage lorsqu'il passe le portail
     def portalSlowdown(self):
         self.speed = 100
         if self.node.portalNode or self.target.portalNode:
             self.speed = 50
 
-
+    ## Fonction du jeu retournant un objectif aléatoire, l'objectif est un vecteur
     def randomGoal(self):
         x = randint(0, NCOLS*TILEWIDTH)
         y = randint(0, NROWS*TILEHEIGHT)
         self.goal = Vector2(x, y)
 
-        
+     ## Fonction du jeu permettant de trouver le point de départ d'un personnage
     def findSpawnNode(self):
         for node in self.nodes.homeList:
             if node.spawnNode:
                 break
         return node
     
+    ## Fonction du jeu permettant de définir le point de départ d'un personnage lors de sa mort
     def spawnGoal(self):
         self.goal = self.spawnNode.position
 

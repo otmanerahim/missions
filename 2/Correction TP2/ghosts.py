@@ -144,6 +144,7 @@ class Pinky(Ghost):
             self.direction = self.getClosestDirection(validDirections)
             self.target = self.node.neighbors[self.direction]
             self.setPosition()
+            
     def forceBacktrack(self):
         if self.direction * -1 == UP:
             return UP
