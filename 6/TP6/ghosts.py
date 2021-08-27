@@ -5,6 +5,7 @@ from vector import Vector2
 from modes import Mode
 from random import randint
 from stack import Stack
+from animation import Animation
 
 class Ghost(MazeRunner):
     def __init__(self, nodes, spritesheet):
@@ -20,13 +21,32 @@ class Ghost(MazeRunner):
         self.modeStack = self.setupModeStack()
         self.mode = self.modeStack.pop()
         self.modeTimer = 0
+        self.animation = None
+        self.animations = {}
         
     def findStartNode(self):
         for node in self.nodes.homeList:
             if node.homeEntrance:
                 return node
         return node
-        
+    
+    def spawnGoal(self):
+        self.goal = self.spawnNode.position
+    
+    def spawnMode(self, speed=1):
+        self.mode = Mode("SPAWN", speedMult=speed)
+        self.setStartPosition()
+
+    def findSpawnNode(self):
+        for node in self.nodes.homeList:
+            if node.spawnNode:
+                break
+        return node
+    
+    def freightMode(self):
+        # to complete
+        pass
+
     def setupModeStack(self):
         modes = Stack()
         modes.push(Mode(name="CHASE"))
@@ -38,6 +58,93 @@ class Ghost(MazeRunner):
         modes.push(Mode(name="CHASE"))
         modes.push(Mode(name="SCATTER"))
         return modes
+
+    def defineAnimations(self, row):
+        anim = Animation("loop")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(0, row, TILEWIDTH*2, TILEHEIGHT*2))
+        anim.addFrame(self.spritesheet.getImage(1, row, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["up"] = anim
+
+        anim = Animation("loop")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(2, row, TILEWIDTH*2, TILEHEIGHT*2))
+        anim.addFrame(self.spritesheet.getImage(3, row, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["down"] = anim
+
+        anim = Animation("loop")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(4, row, TILEWIDTH*2, TILEHEIGHT*2))
+        anim.addFrame(self.spritesheet.getImage(5, row, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["left"] = anim
+
+        anim = Animation("loop")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(6, row, TILEWIDTH*2, TILEHEIGHT*2))
+        anim.addFrame(self.spritesheet.getImage(7, row, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["right"] = anim
+
+        anim = Animation("loop")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(0, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        anim.addFrame(self.spritesheet.getImage(1, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["freight"] = anim
+
+        anim = Animation("loop")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(0, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        anim.addFrame(self.spritesheet.getImage(2, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        anim.addFrame(self.spritesheet.getImage(1, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        anim.addFrame(self.spritesheet.getImage(3, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["flash"] = anim
+
+        anim = Animation("static")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(4, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["spawnup"] = anim
+
+        anim = Animation("static")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(5, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["spawndown"] = anim
+
+        anim = Animation("static")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(6, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["spawnleft"] = anim
+
+        anim = Animation("static")
+        anim.speed = 10
+        anim.addFrame(self.spritesheet.getImage(7, 6, TILEWIDTH*2, TILEHEIGHT*2))
+        self.animations["spawnright"] = anim
+
+    def updateAnimation(self, dt):
+        if self.mode.name == "SPAWN":
+            if self.direction == UP:
+                self.animation = self.animations["spawnup"]
+            elif self.direction == DOWN:
+                self.animation = self.animations["spawndown"]
+            elif self.direction == LEFT:
+                self.animation = self.animations["spawnleft"]
+            elif self.direction == RIGHT:
+                self.animation = self.animations["spawnright"]
+                
+        if self.mode.name in ["CHASE", "SCATTER"]:
+            if self.direction == UP:
+                self.animation = self.animations["up"]
+            elif self.direction == DOWN:
+                self.animation = self.animations["down"]
+            elif self.direction == LEFT:
+                self.animation = self.animations["left"]
+            elif self.direction == RIGHT:
+                self.animation = self.animations["right"]
+                
+        if self.mode.name == "FREIGHT":
+            if self.modeTimer >= (self.mode.time * 0.7):
+                self.animation = self.animations["flash"]
+            else:
+                self.animation = self.animations["freight"]
+        self.image = self.animation.update(dt)
     
     
     def forceBacktrack(self):
@@ -75,8 +182,17 @@ class Ghost(MazeRunner):
         validDirections = []
         for key in self.node.neighbors.keys():
             if self.node.neighbors[key] is not None:
-                validDirections.append(key)
-        if (len(validDirections) == 0):
+                if key != self.direction * -1:
+                    if not self.mode.name == "SPAWN":
+                        if not self.node.homeEntrance:
+                            if key not in self.bannedDirections:
+                                validDirections.append(key)
+                        else:
+                            if key != DOWN:
+                                validDirections.append(key)
+                    else:
+                        validDirections.append(key)
+        if len(validDirections) == 0:
             validDirections.append(self.forceBacktrack())
         return validDirections
     
@@ -98,6 +214,7 @@ class Ghost(MazeRunner):
         self.position += self.direction*self.speed*dt
         self.modeUpdate(dt)
         print("Actual mode for ", self.name , " : ", self.mode.name , " : ", self.mode.time)
+    
 
     def portalSlowdown(self):
         self.speed = 100
@@ -127,26 +244,18 @@ class Blinky(Ghost):
         self.name = "blinky"
         self.color = RED
         self.image = self.spritesheet.getImage(4,2,TILEWIDTH*2, TILEHEIGHT*2)
+        self.defineAnimations(2)
+        self.animation = self.animations["left"]
 
     def setStartPosition(self):
         ## Changement de la position de départ pour éviter que blinky se retrouve coincé dans la maison 
         self.setPosition()
 
-    def getValidDirections(self,pacman):
-       validDirections = []
-       for key in self.node.neighbors.keys():
-            if self.node.neighbors[key] is not None:
-                if(key != self.direction * -1 ):
-                    validDirections.append(key)
-       if (len(validDirections) == 0):
-            validDirections.append(self.forceBacktrack())
-       return validDirections
 
-
-    def moveBySelf(self,pacman):
+    def moveBySelf(self):
         if self.overshotTarget():
             self.node = self.target
-            validDirections = self.getValidDirections(pacman)
+            validDirections = self.getValidDirections()
             ## On prend la direction la plus proche de pacman en la calculant selon la position de pacman
             self.direction = self.getClosestDirection(validDirections)
             self.target = self.node.neighbors[self.direction]
@@ -157,9 +266,16 @@ class Blinky(Ghost):
         self.mode.time=8
         if self.mode.name == "CHASE":
             self.chaseGoal(pacman)
+        elif self.mode.name == "FREIGHT":
+            # to complete
+            pass
+        elif self.mode.name == "SPAWN":
+            self.spawnGoal()
         else:
             self.randomGoal()
-        self.moveBySelf(pacman)
+        self.moveBySelf()
+        
+        self.updateAnimation(dt)
 
     def chaseGoal(self, pacman):
         self.goal= pacman.position
@@ -170,6 +286,8 @@ class Pinky(Ghost):
         self.name = "pinky"
         self.color = PINK
         self.image = self.spritesheet.getImage(0,3,TILEWIDTH*2, TILEHEIGHT*2)
+        self.defineAnimations(3)
+        self.animation = self.animations["up"]
 
     def setStartPosition(self):
         startNode = self.findStartNode()
@@ -193,9 +311,16 @@ class Pinky(Ghost):
         self.mode.time=12
         if self.mode.name == "CHASE":
             self.chaseGoal(pacman)
+        elif self.mode.name == "FREIGHT":
+            # to complete
+            pass
+        elif self.mode.name == "SPAWN":
+            self.spawnGoal()
         else:
             self.randomGoal()
         self.moveBySelf()
+        
+        self.updateAnimation(dt)
         
 
 class Inky(Ghost):
@@ -206,7 +331,8 @@ class Inky(Ghost):
         self.pelletsForRelease = 30
         self.released = False
         self.image = self.spritesheet.getImage(2,4,TILEWIDTH*2, TILEHEIGHT*2)
-
+        self.defineAnimations(4)
+        self.animation = self.animations["down"]
 
     def setStartPosition(self):
         startNode = self.findStartNode()
@@ -233,9 +359,16 @@ class Inky(Ghost):
         self.mode.time=15
         if self.mode.name == "CHASE":
             self.chaseGoal(pacman,blinky)
+        elif self.mode.name == "FREIGHT":
+            #to complete
+            pass
+        elif self.mode.name == "SPAWN":
+            self.spawnGoal()
         else:
             self.randomGoal()
         self.moveBySelf()
+        
+        self.updateAnimation(dt)
         
 
         
@@ -248,26 +381,20 @@ class Clyde(Ghost):
         self.pelletsForRelease = 60
         self.released = False
         self.image = self.spritesheet.getImage(2,5,TILEWIDTH*2, TILEHEIGHT*2)
+        self.defineAnimations(5)
+        self.animation = self.animations["down"]
 
     def setStartPosition(self):
         startNode = self.findStartNode()
         self.node = startNode.neighbors[DOWN].neighbors[UP].neighbors[LEFT].neighbors[LEFT].neighbors[DOWN]
         self.target = self.node
         self.setPosition()
-    
-    def getValidDirections(self,pacman):
-        validDirections = []
-        for key in self.node.neighbors.keys():
-            if self.node.neighbors[key] is not None:
-                if(key != self.direction * -1 ):
-                    validDirections.append(key)
-        return validDirections
 
-    def moveBySelf(self,pacman):
+    def moveBySelf(self):
         if self.overshotTarget():
             self.node = self.target
             self.portal()
-            validDirections = self.getValidDirections(pacman)
+            validDirections = self.getValidDirections()
             self.direction = self.getClosestDirection(validDirections)
             self.target = self.node.neighbors[self.direction]
             self.setPosition()
@@ -286,9 +413,16 @@ class Clyde(Ghost):
         self.mode.time=10
         if self.mode.name == "CHASE":
             self.chaseGoal(pacman)
+        elif self.mode.name == "FREIGHT":
+            #to complete
+            pass
+        elif self.mode.name == "SPAWN":
+            self.spawnGoal()
         else:
             self.randomGoal()
-        self.moveBySelf(pacman)
+        self.moveBySelf()
+        
+        self.updateAnimation(dt)
 
         
 class GhostGroup(object):
@@ -315,7 +449,18 @@ class GhostGroup(object):
             if not ghost.released:
                 if numPelletsEaten >= ghost.pelletsForRelease:
                     ghost.bannedDirections = []
+                    ghost.spawnMode()
                     ghost.released = True
+    
+    def freightMode(self):
+        for ghost in self:
+            ghost.freightMode()
+
+    def isInFreightMode(self):
+        for ghost in self:
+            if(ghost.mode.name=="FREIGHT"):
+                return True
+        return False
 
     def updatePoints(self):
         for ghost in self:

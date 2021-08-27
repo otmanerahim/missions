@@ -7,6 +7,7 @@ from pellets import PelletGroup
 from ghosts import GhostGroup
 from pauser import Pauser
 from levels import LevelController
+from fruit import Fruit
 from text import TextGroup
 from sprites import Spritesheet
 from maze import Maze
@@ -21,6 +22,7 @@ class GameController(object):
         self.clock = pygame.time.Clock()
         self.pelletsEaten = 0
         self.pause = Pauser(True)
+        self.fruit = None
         self.level = LevelController()
         self.text = TextGroup()
         self.score = 0
@@ -32,8 +34,8 @@ class GameController(object):
         self.death_sound= pygame.mixer.Sound("./sound/pacman_death.wav")
         self.eatghost_sound= pygame.mixer.Sound("./sound/pacman_eatghost.wav")
         self.intro_sound=pygame.mixer.Sound("./sound/pacman_beginning.wav")
-    
-        
+        self.intermission_sound=pygame.mixer.Sound("./sound/pacman_intermission.wav")
+
     def setBackground(self):
         self.background = pygame.surface.Surface(SCREENSIZE).convert()
         self.background_flash = pygame.surface.Surface(SCREENSIZE).convert()
@@ -51,6 +53,7 @@ class GameController(object):
         self.pacman = Pacman(self.nodes, self.sheet)
         self.ghosts = GhostGroup(self.nodes, self.sheet)
         self.pelletsEaten = 0
+        self.fruit = None
         self.pause.force(True)
         self.text.showReady()
         self.text.updateLevel(self.level.level+1)
@@ -71,6 +74,7 @@ class GameController(object):
         self.ghosts = GhostGroup(self.nodes, self.sheet)
         self.pelletsEaten = 0
         self.pause.force(True)
+        self.fruit = None
         self.text.updateLevel(self.level.level+1)
         self.flashBackground = False
         self.maze.reset()
@@ -80,6 +84,7 @@ class GameController(object):
         self.pacman.reset()
         self.ghosts = GhostGroup(self.nodes, self.sheet)
         self.pause.force(True)
+        self.fruit = None
         self.flashBackground = False
         self.maze.reset()
         
@@ -89,12 +94,16 @@ class GameController(object):
             if not self.pause.paused:
                 self.pacman.update(dt)
                 self.ghosts.update(dt,self.pacman,self.ghosts.ghosts[0])
+                
+                if self.fruit is not None:
+                    self.fruit.update(dt)
 
                 if self.pause.pauseType != None:
                     self.pause.settlePause(self)
             
                 self.checkPelletEvents()
                 self.checkGhostEvents()
+                self.checkFruitEvents()
 
             else:
                 if self.flashBackground:
@@ -125,16 +134,31 @@ class GameController(object):
                             self.text.showPause()
                         else:
                             self.text.hideMessages()
+
+    def checkFruitEvents(self):
+        # to complete
+        pass
         
     def checkPelletEvents(self):
         pellet = self.pacman.eatPellets(self.pellets.pelletList)
+        if(self.ghosts.isInFreightMode() and pygame.mixer.get_busy()==False):
+            pygame.mixer.Sound.play(self.intermission_sound,loops=-1)
+        elif (self.ghosts.isInFreightMode()==False):
+            pygame.mixer.Sound.stop(self.intermission_sound)
         if pellet:
             pygame.mixer.Sound.play(self.eat_sound)
             self.pelletsEaten += 1
             self.score += pellet.points
+            if (self.pelletsEaten == 70 or self.pelletsEaten == 140):
+                if self.fruit is None:
+                    levelmap = self.level.getLevel()
+                    self.fruit = Fruit(self.nodes, self.sheet, levelmap["fruit"])
             self.pellets.pelletList.remove(pellet)
             if pellet.name == "powerpellet":
+                pygame.mixer.Sound.stop(self.intermission_sound)
+                pygame.mixer.Sound.play(self.intermission_sound,loops=-1)
                 self.ghosts.resetPoints()
+                # to complete
             if self.pellets.isEmpty():
                 self.pacman.visible = False
                 self.ghosts.hide()
@@ -146,10 +170,15 @@ class GameController(object):
         self.ghosts.release(self.pelletsEaten)
         ghost = self.pacman.eatGhost(self.ghosts)
         if ghost is not None:
-            pygame.mixer.Sound.play(self.death_sound)
-            self.pacman.loseLife()
-            self.ghosts.hide()
-            self.pause.startTimer(3, "die")
+            if ghost.mode.name == "FREIGHT":
+                # to complete 
+                pass
+            
+            elif ghost.mode.name != "SPAWN":
+                pygame.mixer.Sound.play(self.death_sound)
+                self.pacman.loseLife()
+                self.ghosts.hide()
+                self.pause.startTimer(3, "die")
             
 
     def resolveDeath(self):
@@ -165,6 +194,8 @@ class GameController(object):
         self.screen.blit(self.maze.background, (0,0))
         #self.nodes.render(self.screen)
         self.pellets.render(self.screen)
+        if self.fruit is not None:
+            self.fruit.render(self.screen)
         self.pacman.render(self.screen)
         self.ghosts.render(self.screen)
         self.pacman.renderLives(self.screen)

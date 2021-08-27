@@ -52,11 +52,8 @@ class Ghost(MazeRunner):
     
     
     def modeUpdate(self, dt):
-        self.modeTimer += dt
-        if self.mode.time is not None:
-            if self.modeTimer >= self.mode.time:
-                self.mode = self.modeStack.pop()
-                self.modeTimer = 0
+        #To complete
+        pass
     
     def setStartPosition(self):
         self.node = self.findStartNode()
